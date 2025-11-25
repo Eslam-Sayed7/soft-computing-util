@@ -1,22 +1,86 @@
 package com.example.softcomputing.fuzzy.utils;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FuzzySet {
+    private final String name;
+    private final List<Point> membershipPoints;
 
-    Map<String, Double> membershipValues;
-
-    public Map<String, Double> getMembershipValues() {
-        return membershipValues;
+    public FuzzySet(String name) {
+        this.name = name;
+        this.membershipPoints = new ArrayList<>();
     }
 
-    public void setMembershipValues(Map<String, Double> membershipValues) {
-        this.membershipValues = membershipValues;
+    public FuzzySet(String name, List<Point> points) {
+        this.name = name;
+        this.membershipPoints = new ArrayList<>(points);
     }
 
-    /*
-        Input: Fuzzified features from the Fuzzifier
-        • Interest: Low=0, Medium=0.6, High=0.4
-        • Budget: Low=0, Medium=0.8, High=0.2
-    */
+    public void addPoint(double x, double membershipValue) {
+        membershipPoints.add(new Point(x, membershipValue));
+    }
+
+    public void addPoint(Point point) {
+        membershipPoints.add(point);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public List<Point> getMembershipPoints() {
+        return new ArrayList<>(membershipPoints);
+    }
+
+    public double getMembershipValue(double x) {
+        if (membershipPoints.isEmpty()) {
+            return 0.0;
+        }
+
+        if (membershipPoints.size() == 1) {
+            return membershipPoints.get(0).getY();
+        }
+
+        for (int i = 0; i < membershipPoints.size() - 1; i++) {
+            Point p1 = membershipPoints.get(i);
+            Point p2 = membershipPoints.get(i + 1);
+
+            if (x >= p1.getX() && x <= p2.getX()) {
+                if (p2.getX() == p1.getX()) {
+                    return p1.getY();
+                }
+                return p1.getY() + (p2.getY() - p1.getY()) * (x - p1.getX()) / (p2.getX() - p1.getX());
+            }
+        }
+
+        if (x < membershipPoints.get(0).getX()) {
+            return membershipPoints.get(0).getY();
+        }
+        return membershipPoints.get(membershipPoints.size() - 1).getY();
+    }
+
+    public enum ExtremumType {
+        MIN, MAX
+    }
+
+    public double getExtremumX(ExtremumType type) {  // to get min or max x value
+        if (type == ExtremumType.MIN) {
+            return membershipPoints.stream()
+                    .mapToDouble(Point::getX)
+                    .min()
+                    .orElse(0.0);
+        } else {
+            return membershipPoints.stream()
+                    .mapToDouble(Point::getX)
+                    .max()
+                    .orElse(0.0);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return String.format("FuzzySet{name='%s', points=%d}", name, membershipPoints.size());
+    }
 }
+
