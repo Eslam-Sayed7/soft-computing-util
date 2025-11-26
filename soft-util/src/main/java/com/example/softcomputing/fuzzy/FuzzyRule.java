@@ -1,7 +1,9 @@
 package com.example.softcomputing.fuzzy;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
+
+import com.example.softcomputing.fuzzy.operators.TNorm;
 
 public class FuzzyRule {
     
@@ -45,10 +47,60 @@ public class FuzzyRule {
     }
 
     /**
+     * Evaluates the rule's firing strength using a provided T-Norm operator.
+     */
+    public double evaluateFiringStrength(Map<String, Map<String, Double>> fuzzyInputs, TNorm tNorm) {
+        double firingStrength = -1.0; // sentinel to initialize with first value
+
+        for (Map.Entry<String, String> antecedent : antecedents.entrySet()) {
+            String variable = antecedent.getKey();
+            String linguisticValue = antecedent.getValue();
+
+            if (fuzzyInputs.containsKey(variable)) {
+                Map<String, Double> membershipValues = fuzzyInputs.get(variable);
+                if (membershipValues.containsKey(linguisticValue)) {
+                    double membershipDegree = membershipValues.get(linguisticValue);
+                    if (firingStrength < 0) {
+                        firingStrength = membershipDegree; // first value
+                    } else {
+                        firingStrength = tNorm.apply(firingStrength, membershipDegree);
+                    }
+                } else {
+                    return 0.0; // If linguistic value not found, rule doesn't fire
+                }
+            } else {
+                return 0.0; // If variable not found, rule doesn't fire
+            }
+        }
+
+        return firingStrength < 0 ? 0.0 : firingStrength;
+    }
+
+    /**
      * Applies the rule and returns the consequent with firing strength
      */
     public Map<String, Map<String, Double>> apply(Map<String, Map<String, Double>> fuzzyInputs) {
         double firingStrength = evaluateFiringStrength(fuzzyInputs);
+        Map<String, Map<String, Double>> result = new HashMap<>();
+
+        // Apply firing strength to consequent
+        for (Map.Entry<String, String> cons : consequent.entrySet()) {
+            String outputVariable = cons.getKey();
+            String linguisticValue = cons.getValue();
+
+            Map<String, Double> outputMap = new HashMap<>();
+            outputMap.put(linguisticValue, firingStrength);
+            result.put(outputVariable, outputMap);
+        }
+
+        return result;
+    }
+
+    /**
+     * Applies the rule using a supplied T-Norm operator for firing strength computation.
+     */
+    public Map<String, Map<String, Double>> apply(Map<String, Map<String, Double>> fuzzyInputs, TNorm tNorm) {
+        double firingStrength = evaluateFiringStrength(fuzzyInputs, tNorm);
         Map<String, Map<String, Double>> result = new HashMap<>();
 
         // Apply firing strength to consequent

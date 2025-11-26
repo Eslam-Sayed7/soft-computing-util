@@ -6,15 +6,23 @@ import java.util.List;
 public class FuzzySet {
     private final String name;
     private final List<Point> membershipPoints;
+    // optional named membership values map (linguistic label -> degree)
+    private java.util.Map<String, Double> membershipValuesMap;
 
     public FuzzySet(String name) {
         this.name = name;
         this.membershipPoints = new ArrayList<>();
+        this.membershipValuesMap = new java.util.HashMap<>();
+    }
+
+    public FuzzySet() {
+        this("unnamed");
     }
 
     public FuzzySet(String name, List<Point> points) {
         this.name = name;
         this.membershipPoints = new ArrayList<>(points);
+        this.membershipValuesMap = new java.util.HashMap<>();
     }
 
     public void addPoint(double x, double membershipValue) {
@@ -76,6 +84,27 @@ public class FuzzySet {
                     .max()
                     .orElse(0.0);
         }
+    }
+
+    /**
+     * Set membership values by linguistic label. This is a convenience used by some fuzzifiers
+     * which produce a map of label->degree. We also populate the numeric membershipPoints
+     * with index-based x coordinates so defuzzifiers that use points can operate.
+     */
+    public void setMembershipValues(java.util.Map<String, Double> map) {
+        this.membershipValuesMap = new java.util.HashMap<>(map);
+        this.membershipPoints.clear();
+        int idx = 0;
+        for (java.util.Map.Entry<String, Double> e : map.entrySet()) {
+            this.membershipPoints.add(new Point(idx++, e.getValue()));
+        }
+    }
+
+    /**
+     * Returns the linguistic membership map if available.
+     */
+    public java.util.Map<String, Double> getMembershipValues() {
+        return new java.util.HashMap<>(membershipValuesMap);
     }
 
     @Override
