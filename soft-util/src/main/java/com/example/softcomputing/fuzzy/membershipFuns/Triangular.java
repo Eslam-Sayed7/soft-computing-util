@@ -1,65 +1,55 @@
 package com.example.softcomputing.fuzzy.membershipFuns;
 
-import java.util.List;
-
 import com.example.softcomputing.fuzzy.MembershipFunction;
 import com.example.softcomputing.fuzzy.utils.Point;
 
 public class Triangular implements MembershipFunction {
 
-  private List<Point> points;
-  private double b;
-  private double slope;
+  private Point p1; // left point
+  private Point p2; // peak point
+  private Point p3; // right point
 
   public Triangular(Point p1, Point p2, Point p3) {
-
-    points.add(p1);
-    points.add(p2);
-    points.add(p3);
-
-    if (p1 == p2) {
-      calcSlope(p2, p3);
-      this.b = p2.getY(); // y-intercept
-
-    } else {
-      calcSlope(p1, p2);
-      this.b = p1.getY(); // zero
-    }
-
+    this.p1 = p1;
+    this.p2 = p2;
+    this.p3 = p3;
   }
 
   @Override
-  public double apply(double crispInput) {
-    // y = mx + b
-    return slope * crispInput + b;
+  public double apply(double x) {
+    // Triangular membership function
+    // Returns 0 if outside [p1.x, p3.x]
+    // Linear rise from p1 to p2, linear fall from p2 to p3
+    
+    if (x <= p1.getX() || x >= p3.getX()) {
+      return 0.0;
+    }
+    
+    if (x == p2.getX()) {
+      return p2.getY(); // peak value
+    }
+    
+    if (x < p2.getX()) {
+      // Rising slope from p1 to p2
+      double slope = (p2.getY() - p1.getY()) / (p2.getX() - p1.getX());
+      return p1.getY() + slope * (x - p1.getX());
+    } else {
+      // Falling slope from p2 to p3
+      double slope = (p3.getY() - p2.getY()) / (p3.getX() - p2.getX());
+      return p2.getY() + slope * (x - p2.getX());
+    }
   }
 
-  public void calcSlope(Point first, Point second) {
-    this.slope = (first.getY() - second.getY()) / (first.getX() - second.getX());
+  public Point getP1() {
+    return p1;
   }
 
-  public List<Point> getPoints() {
-    return points;
+  public Point getP2() {
+    return p2;
   }
 
-  public void setPoints(List<Point> points) {
-    this.points = points;
-  }
-
-  public double getb() {
-    return b;
-  }
-
-  public void setb(double b) {
-    this.b = b;
-  }
-
-  public double getSlope() {
-    return slope;
-  }
-
-  public void setSlope(double slope) {
-    this.slope = slope;
+  public Point getP3() {
+    return p3;
   }
 
 }
