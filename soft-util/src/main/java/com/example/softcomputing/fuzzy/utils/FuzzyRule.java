@@ -16,8 +16,16 @@ public class FuzzyRule {
         this.name = name;
         this.input = input;
         this.output = output;
-        this.consequentValue = consequentValue;
+        this.consequentValue = null;
 
+    }
+
+    // Sugeno-style rules  consequent is a numeric value.
+    public FuzzyRule(String name, Map<String, String> input, double consequentValue) {
+        this.name = name;
+        this.input = input;
+        this.output = new HashMap<>();
+        this.consequentValue = consequentValue;
     }
 
     public Map<String, Map<String, Double>> apply(Map<String, Map<String, Double>> fuzzyInputs, TNorm tNorm) {
@@ -86,7 +94,7 @@ public class FuzzyRule {
     }
 
     public double getConsequentValue() {
-        return consequentValue != null ? consequentValue : 0.0;
+        return consequentValue == null ? 0.0 : consequentValue.doubleValue();
     }
 
 }

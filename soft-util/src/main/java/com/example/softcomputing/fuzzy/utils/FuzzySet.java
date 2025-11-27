@@ -1,18 +1,20 @@
 package com.example.softcomputing.fuzzy.utils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FuzzySet {
     private final String name;
     private final List<Point> membershipPoints;
     // optional named membership values map (linguistic label -> degree)
-    private java.util.Map<String, Double> membershipValuesMap;
+    private Map<String, Double> membershipValuesMap;
 
     public FuzzySet(String name) {
         this.name = name;
         this.membershipPoints = new ArrayList<>();
-        this.membershipValuesMap = new java.util.HashMap<>();
+        this.membershipValuesMap = new HashMap<>();
     }
 
     public FuzzySet() {
@@ -22,7 +24,7 @@ public class FuzzySet {
     public FuzzySet(String name, List<Point> points) {
         this.name = name;
         this.membershipPoints = new ArrayList<>(points);
-        this.membershipValuesMap = new java.util.HashMap<>();
+        this.membershipValuesMap = new HashMap<>();
     }
 
     public void addPoint(double x, double membershipValue) {

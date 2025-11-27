@@ -1,13 +1,11 @@
-package com.example.softcomputing.fuzzy.utils;
+package com.example.softcomputing.fuzzy.usecase;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Simple CSV loader for person/user data
- */
+
 public class UserCSVLoader {
 
     public static class User {

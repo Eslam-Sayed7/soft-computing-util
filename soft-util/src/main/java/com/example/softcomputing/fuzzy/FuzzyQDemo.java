@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import com.example.softcomputing.fuzzy.Defuzzifiers.Centroid;
+import com.example.softcomputing.fuzzy.Defuzzifiers.WeightedMeanDefuzzifier;
 import com.example.softcomputing.fuzzy.Fuzzfication.BasicFuzzifier;
 import com.example.softcomputing.fuzzy.inference.MamdaniInferenceEngine;
 import com.example.softcomputing.fuzzy.membershipFuns.Triangular;
@@ -14,7 +14,7 @@ import com.example.softcomputing.fuzzy.operators.MinTNorm;
 import com.example.softcomputing.fuzzy.utils.FuzzyRule;
 import com.example.softcomputing.fuzzy.utils.InputVariable;
 import com.example.softcomputing.fuzzy.utils.OutputVariable;
-import com.example.softcomputing.fuzzy.utils.Point;;
+import com.example.softcomputing.fuzzy.utils.Point;
 
 public class FuzzyQDemo {
 
@@ -89,7 +89,7 @@ public class FuzzyQDemo {
 
         FuzzyController controller = FuzzyController.builder()
                 .withFuzzifier(fuzzifier)
-                .withDefuzzifier(new Centroid(1000))
+                .withDefuzzifier(new WeightedMeanDefuzzifier())
                 .withInferenceEngine(inferenceEngine)
                 .addOutputVariable(quality)
                 .build();
@@ -103,36 +103,48 @@ public class FuzzyQDemo {
 
         List<String> features = Arrays.asList("Size", "Weight");
 
-        System.out.printf("Inputs: size=%.2f, weight=%.2f\n\n", sizeValue, weightValue);
+        System.out.printf("Inputs: size=%.2f, weight=%.2f\n", sizeValue, weightValue);
         double result = controller.evaluate(inputs, features);
 
-        // ========== 8. DISPLAY RESULTS ==========
-
-        System.out.println("(1) Fuzzification");
         Map<String, Map<String, Double>> fuzzyInputs = controller.getLastFuzzyInputs();
-        fuzzyInputs.forEach((var, terms) -> {
-            System.out.println(var + ":");
-            terms.forEach((term, degree) -> System.out.printf("  %s = %.4f\n", term, degree));
-        });
-
-        System.out.println("\n(2) Inference");
         MinTNorm tNorm = new MinTNorm();
+        Map<String, Double> ruleFiring = new java.util.LinkedHashMap<>();
         for (FuzzyRule rule : rules) {
             double firingStrength = rule.evaluateFiringStrength(fuzzyInputs, tNorm);
-            String outputLabel = rule.getConsequent().values().iterator().next();
-            System.out.printf("%s: Value = %.4f -> %s\n",
-                    rule.getName(), firingStrength, outputLabel);
+            ruleFiring.put(rule.getName(), firingStrength);
         }
 
-        System.out.println("\n(3) Aggregation ");
-        Map<String, Map<String, Double>> aggregated = controller.getLastAggregatedOutput();
-        aggregated.forEach((var, terms) -> {
-            System.out.println(var + ":");
-            terms.forEach((term, degree) -> System.out.printf("  %s = %.4f (centroid = %.4f)\n",
-                    term, degree, quality.getCrispValue(term)));
+        // Print concise summaries
+        System.out.println("\nFuzzified inputs:");
+        fuzzyInputs.forEach((var, terms) -> {
+            StringBuilder sb = new StringBuilder();
+            terms.forEach((term, degree) -> sb.append(String.format("%s=%.4f, ", term, degree)));
+            if (sb.length() > 2) sb.setLength(sb.length() - 2); // trim trailing comma
+            System.out.printf("  %s: %s\n", var, sb.toString());
         });
 
-        System.out.println("\n(4) Defuzzification");
-        System.out.printf("Defuzzified Output (Quality): %.4f\n", result);
+        System.out.println("\nRule firing strengths:");
+        ruleFiring.forEach((r, v) -> System.out.printf("  %s = %.4f\n", r, v));
+
+        Map<String, Map<String, Double>> aggregated = controller.getLastAggregatedOutput();
+        System.out.println("\nAggregated output (Quality):");
+        aggregated.getOrDefault("Quality", Map.of()).forEach((term, degree) ->
+                System.out.printf("  %s = %.4f (centroid=%.4f)\n", term, degree, quality.getCrispValue(term)));
+
+        // Manual weighted-mean summary (compact)
+        double numerator = 0.0;
+        double denominator = 0.0;
+        for (FuzzyRule rule : rules) {
+            double f = ruleFiring.getOrDefault(rule.getName(), 0.0);
+            String consequent = rule.getConsequent().values().iterator().next();
+            double c = quality.getCrispValue(consequent);
+            numerator += f * c;
+            denominator += f;
+        }
+        double manual = (denominator == 0.0 ? 0.0 : numerator / denominator);
+        System.out.printf("\nManual weighted mean: numerator=%.4f, denominator=%.4f, z*=%.4f\n",
+                numerator, denominator, manual);
+
+        System.out.printf("Final defuzzified Quality (controller.evaluate) = %.4f\n", result);
     }
 }
