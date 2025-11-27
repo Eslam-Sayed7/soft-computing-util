@@ -1,12 +1,12 @@
 package com.example.softcomputing.fuzzy.Defuzzifiers;
 
-import com.example.softcomputing.fuzzy.Defuzzifier;
+import java.util.List;
+
 import com.example.softcomputing.fuzzy.utils.FuzzySet;
 import com.example.softcomputing.fuzzy.utils.Point;
 
-import java.util.List;
-
 public class Centroid implements Defuzzifier {
+
     private final int samplingPoints;
 
     public Centroid() {
@@ -51,4 +51,3 @@ public class Centroid implements Defuzzifier {
         return numerator / denominator;
     }
 }
-

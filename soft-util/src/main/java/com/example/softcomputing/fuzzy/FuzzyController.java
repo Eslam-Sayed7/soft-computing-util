@@ -1,168 +1,316 @@
 package com.example.softcomputing.fuzzy;
 
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.example.softcomputing.fuzzy.Defuzzifiers.Centroid;
+import com.example.softcomputing.fuzzy.Defuzzifiers.Defuzzifier;
+import com.example.softcomputing.fuzzy.Fuzzfication.BasicFuzzifier;
+import com.example.softcomputing.fuzzy.Fuzzfication.Fuzzifier;
+import com.example.softcomputing.fuzzy.inference.InferenceEngineInterface;
+import com.example.softcomputing.fuzzy.inference.MamdaniInferenceEngine;
+import com.example.softcomputing.fuzzy.utils.FuzzyRule;
 import com.example.softcomputing.fuzzy.utils.FuzzySet;
+import com.example.softcomputing.fuzzy.utils.InputDomain;
+import com.example.softcomputing.fuzzy.utils.InputHandlingStrategy;
+import com.example.softcomputing.fuzzy.utils.OutputVariable;
 
-/**
- * A modular FuzzyController configured via the Builder pattern. Allows swapping
- * of fuzzifier, defuzzifier and inference engine (which itself can be configured
- * with different t-norm/s-norm implementations).
- */
 public class FuzzyController {
 
+    // Core components
     private Fuzzifier fuzzifier;
     private Defuzzifier defuzzifier;
     private InferenceEngineInterface inferenceEngine;
+    private RuleManager ruleManager;
 
-    private FuzzyController() {}
+    // Input/Output configuration
+    private Map<String, Double> defaultInputValues;
+    private Map<String, InputDomain> inputDomains;
+    private Map<String, OutputVariable> outputVariables;
+
+    // Debugging
+    private Map<String, Map<String, Double>> lastFuzzyInputs;
+    private Map<String, Map<String, Double>> lastAggregatedOutput;
+    private double lastCrispOutput;
+    private InputHandlingStrategy inputHandlingStrategy;
+
+    private FuzzyController() {
+        this.ruleManager = new RuleManager();
+        this.defaultInputValues = new HashMap<>();
+        this.inputDomains = new HashMap<>();
+        this.outputVariables = new HashMap<>();
+        this.inputHandlingStrategy = InputHandlingStrategy.CLAMP_TO_DOMAIN;
+    }
 
     public static Builder builder() {
         return new Builder();
     }
 
     public static class Builder {
-        private Fuzzifier fuzzifier;
-        private Defuzzifier defuzzifier;
-        private InferenceEngineInterface inferenceEngine;
+        private FuzzyController controller = new FuzzyController();
 
         public Builder withFuzzifier(Fuzzifier fuzzifier) {
-            this.fuzzifier = fuzzifier;
+            controller.fuzzifier = fuzzifier;
             return this;
         }
 
         public Builder withDefuzzifier(Defuzzifier defuzzifier) {
-            this.defuzzifier = defuzzifier;
+            controller.defuzzifier = defuzzifier;
             return this;
         }
 
         public Builder withInferenceEngine(InferenceEngineInterface inferenceEngine) {
-            this.inferenceEngine = inferenceEngine;
+            controller.inferenceEngine = inferenceEngine;
+            return this;
+        }
+
+        public Builder withInputHandlingStrategy(InputHandlingStrategy strategy) {
+            controller.inputHandlingStrategy = strategy;
+            return this;
+        }
+
+        public Builder addInputDomain(String variableName, double min, double max) {
+            controller.inputDomains.put(variableName, new InputDomain(min, max));
+            return this;
+        }
+
+        public Builder addDefaultInput(String variableName, double defaultValue) {
+            controller.defaultInputValues.put(variableName, defaultValue);
+            return this;
+        }
+
+        public Builder addOutputVariable(OutputVariable outputVariable) {
+            controller.outputVariables.put(outputVariable.getName(), outputVariable);
+            return this;
+        }
+
+        public Builder addRule(FuzzyRule rule) {
+            controller.addRule(rule);
             return this;
         }
 
         public FuzzyController build() {
-            FuzzyController controller = new FuzzyController();
-            controller.fuzzifier = this.fuzzifier;
-            controller.defuzzifier = this.defuzzifier;
-            controller.inferenceEngine = this.inferenceEngine;
+            if (controller.fuzzifier == null) {
+                throw new IllegalStateException("Fuzzifier must be configured");
+            }
+            if (controller.defuzzifier == null) {
+                controller.defuzzifier = (Defuzzifier) new Centroid(1000);
+            }
+            if (controller.inferenceEngine == null) {
+                throw new IllegalStateException("InferenceEngine must be configured");
+            }
             return controller;
         }
     }
 
-    public Fuzzifier getFuzzifier() { return fuzzifier; }
-    public Defuzzifier getDefuzzifier() { return defuzzifier; }
-    public InferenceEngineInterface getInferenceEngine() { return inferenceEngine; }
+    // delegation to rule manager
 
-    // Fluent instance setters so callers can configure controller directly
-    public FuzzyController withFuzzifier(Fuzzifier fuzzifier) {
-        this.fuzzifier = fuzzifier;
-        return this;
+    public void addRule(FuzzyRule rule) {
+        ruleManager.addRule(rule);
+        updateInferenceEngine();
     }
 
-    public FuzzyController withDefuzzifier(Defuzzifier defuzzifier) {
-        this.defuzzifier = defuzzifier;
-        return this;
+    public boolean removeRule(String ruleName) {
+        boolean removed = ruleManager.removeRule(ruleName);
+        if (removed) {
+            updateInferenceEngine();
+        }
+        return removed;
     }
 
-    public FuzzyController withInferenceEngine(InferenceEngineInterface inferenceEngine) {
-        this.inferenceEngine = inferenceEngine;
-        return this;
+    public void setRuleEnabled(String ruleName, boolean enabled) {
+        ruleManager.setRuleEnabled(ruleName, enabled);
+        updateInferenceEngine();
     }
 
-    /**
-     * Run fuzzification phase and return the produced FuzzySet.
-     */
-    public FuzzySet runFuzzification(Map<String, Double> crispInputs, List<String> features) {
-        if (fuzzifier == null) throw new IllegalStateException("Fuzzifier not configured");
-        return fuzzifier.fuzzify(crispInputs, features);
+    public void setRuleWeight(String ruleName, double weight) {
+        ruleManager.setRuleWeight(ruleName, weight);
     }
 
-    /**
-     * Run inference phase given an already-fuzzified input map.
-     */
-    public Map<String, Map<String, Double>> runInference(Map<String, Map<String, Double>> fuzzyInputs) {
-        if (inferenceEngine == null) throw new IllegalStateException("Inference engine not configured");
-        return inferenceEngine.infer(fuzzyInputs);
+    public List<FuzzyRule> getAllRules() {
+        return ruleManager.getAllRules();
     }
 
-    /**
-     * Defuzzify fuzzy outputs (assumes single output variable for simplicity).
-     */
-    public double runDefuzzifyFromInference(Map<String, Map<String, Double>> fuzzyOutputs) {
-        if (defuzzifier == null) throw new IllegalStateException("Defuzzifier not configured");
-
-        if (fuzzyOutputs == null || fuzzyOutputs.isEmpty()) return 0.0;
-
-        Map.Entry<String, Map<String, Double>> first = fuzzyOutputs.entrySet().iterator().next();
-        Map<String, Double> lvMap = first.getValue();
-
-        // Convert linguistic map to a simple FuzzySet by placing each linguistic value at an incremental x.
-        FuzzySet fs = convertLinguisticMapToFuzzySet(lvMap);
-        return defuzzifier.defuzzify(fs);
+    public List<FuzzyRule> getActiveRules() {
+        return ruleManager.getActiveRules();
     }
 
-    /**
-     * Convenience full-run: fuzzify -> infer -> defuzzify. This method will try to
-     * convert the produced FuzzySet into the map expected by the inference engine via
-     * reflection (looks for getMembershipValues()). If conversion isn't possible the
-     * method throws an IllegalStateException and suggests using the more specific
-     * runXXX methods.
-     */
-    @SuppressWarnings("unchecked")
-    public double run(Map<String, Double> crispInputs, List<String> features) {
-        FuzzySet fs = runFuzzification(crispInputs, features);
-        return run(fs);
+    public boolean isRuleEnabled(String ruleName) {
+        return ruleManager.isRuleEnabled(ruleName);
     }
 
-    /**
-     * Run starting from a FuzzySet. Attempts to extract membership values and passes them to inference
-     * then defuzzification.
-     */
-    @SuppressWarnings("unchecked")
-    public double run(FuzzySet fs) {
-        if (fs == null) throw new IllegalArgumentException("FuzzySet is null");
+    public double getRuleWeight(String ruleName) {
+        return ruleManager.getRuleWeight(ruleName);
+    }
 
-        try {
-            Method m = fs.getClass().getMethod("getMembershipValues");
-            Object membershipObj = m.invoke(fs);
-            if (membershipObj instanceof Map) {
-                Map<String, Double> membershipValues = (Map<String, Double>) membershipObj;
-                Map<String, Map<String, Double>> fuzzyInputs = new HashMap<>();
-                fuzzyInputs.put("input", membershipValues);
+    public RuleManager getRuleManager() {
+        return ruleManager;
+    }
 
-                // Use engine's convenience defuzzify path if it provides one
-                return inferenceEngine.inferAndDefuzzify(fuzzyInputs, defuzzifier);
+    private void updateInferenceEngine() {
+        if (inferenceEngine instanceof MamdaniInferenceEngine) {
+            ((MamdaniInferenceEngine) inferenceEngine).setRules(getActiveRules());
+        }
+    }
+
+    // ========== INPUT HANDLING & VALIDATION ==========
+
+    private Map<String, Double> handleInputs(Map<String, Double> crispInputs, List<String> features) {
+        Map<String, Double> processedInputs = new HashMap<>();
+
+        for (String feature : features) {
+            Double value = crispInputs.get(feature);
+
+            if (value == null) {
+                value = handleMissingInput(feature);
             }
-        } catch (NoSuchMethodException nsme) {
-            // fall through to error below
-        } catch (Exception e) {
-            throw new RuntimeException("Error while converting FuzzySet to membership map: " + e.getMessage(), e);
+
+            processedInputs.put(feature, value);
         }
 
-        throw new IllegalStateException("Unable to convert FuzzySet into inference input map. Use runFuzzification() and runInference() overloads or update your FuzzySet/fuzzifier to expose membership values via getMembershipValues().");
+        return processedInputs;
+    }
+
+    private double handleMissingInput(String feature) {
+        switch (inputHandlingStrategy) {
+            case USE_DEFAULT:
+                if (defaultInputValues.containsKey(feature)) {
+                    return defaultInputValues.get(feature);
+                }
+                throw new IllegalArgumentException(
+                        "Missing input for feature: " + feature + " and no default provided");
+
+            case THROW_ERROR:
+                throw new IllegalArgumentException("Missing input for feature: " + feature);
+
+            case CLAMP_TO_DOMAIN:
+                throw new IllegalArgumentException("Missing input for feature: " + feature + " and no domain defined");
+
+            default:
+                throw new IllegalStateException("Unknown input handling strategy");
+        }
+    }
+
+    public double evaluate(Map<String, Double> crispInputs, List<String> features) {
+        Map<String, Double> processedInputs = handleInputs(crispInputs, features);
+
+        Map<String, Map<String, Double>> fuzzyInputMap;
+        if (fuzzifier instanceof BasicFuzzifier) {
+            fuzzyInputMap = ((BasicFuzzifier) fuzzifier).fuzzifyToMap(processedInputs, features);
+        } else {
+            FuzzySet fuzzySet = fuzzifier.fuzzify(processedInputs, features);
+            fuzzyInputMap = convertFuzzySetToMap(fuzzySet, features);
+        }
+        this.lastFuzzyInputs = new HashMap<>(fuzzyInputMap);
+
+        Map<String, Map<String, Double>> aggregatedOutput = inferenceEngine.infer(fuzzyInputMap);
+        this.lastAggregatedOutput = new HashMap<>(aggregatedOutput);
+
+        double crispOutput = defuzzifyOutput(aggregatedOutput);
+        this.lastCrispOutput = crispOutput;
+
+        return crispOutput;
+    }
+
+    private double defuzzifyOutput(Map<String, Map<String, Double>> aggregatedOutput) {
+        if (aggregatedOutput == null || aggregatedOutput.isEmpty()) {
+            return 0.0;
+        }
+
+        // Get the first output variable
+        Map.Entry<String, Map<String, Double>> firstOutput = aggregatedOutput.entrySet().iterator().next();
+        String outputVarName = firstOutput.getKey();
+        Map<String, Double> linguisticValues = firstOutput.getValue();
+
+        // Get the output variable configuration
+        OutputVariable outputVar = outputVariables.get(outputVarName);
+        if (outputVar == null) {
+            throw new IllegalStateException(
+                    "No OutputVariable configured for: " + outputVarName +
+                            ". Add it using builder.addOutputVariable()");
+        }
+
+        FuzzySet outputSet = buildOutputFuzzySet(linguisticValues, outputVar);
+        return defuzzifier.defuzzify(outputSet);
     }
 
     /**
-     * Run starting from a fuzzy input map: inference -> defuzzification.
+     * Builds a FuzzySet for defuzzification using the output variable's mapping
      */
-    public double run(Map<String, Map<String, Double>> fuzzyInputs) {
-        Map<String, Map<String, Double>> fuzzyOutput = runInference(fuzzyInputs);
-        return runDefuzzifyFromInference(fuzzyOutput);
-    }
+    private FuzzySet buildOutputFuzzySet(Map<String, Double> linguisticValues, OutputVariable outputVar) {
+        FuzzySet outputSet = new FuzzySet("output");
+        outputSet.setMembershipValues(linguisticValues);
 
-    private FuzzySet convertLinguisticMapToFuzzySet(Map<String, Double> lvMap) {
-        FuzzySet fs = new FuzzySet("auto");
-        int idx = 0;
-        for (Map.Entry<String, Double> e : lvMap.entrySet()) {
-            // x coordinate is an index; y is membership degree
-            fs.addPoint(idx++, e.getValue());
+        for (Map.Entry<String, Double> entry : linguisticValues.entrySet()) {
+            String linguisticTerm = entry.getKey();
+            double membershipDegree = entry.getValue();
+
+            Double crispValue = outputVar.getCrispValue(linguisticTerm);
+            if (crispValue == null) {
+                throw new IllegalStateException(
+                        "Linguistic term '" + linguisticTerm +
+                                "' not mapped in OutputVariable '" + outputVar.getName() + "'");
+            }
+
+            outputSet.addPoint(crispValue, membershipDegree);
         }
-        return fs;
+
+        return outputSet;
     }
 
-}
+    private Map<String, Map<String, Double>> convertFuzzySetToMap(FuzzySet fuzzySet, List<String> features) {
+        Map<String, Map<String, Double>> result = new HashMap<>();
+        Map<String, Double> membershipValues = fuzzySet.getMembershipValues();
 
+        if (!membershipValues.isEmpty()) {
+            for (String feature : features) {
+                result.put(feature, new HashMap<>(membershipValues));
+            }
+        } else {
+            if (!features.isEmpty()) {
+                result.put(features.get(0), membershipValues);
+            }
+        }
+
+        return result;
+    }
+
+    // ========== GETTERS & SETTERS ==========
+
+    public Map<String, Map<String, Double>> getLastFuzzyInputs() {
+        return lastFuzzyInputs != null ? new HashMap<>(lastFuzzyInputs) : new HashMap<>();
+    }
+
+    public Map<String, Map<String, Double>> getLastAggregatedOutput() {
+        return lastAggregatedOutput != null ? new HashMap<>(lastAggregatedOutput) : new HashMap<>();
+    }
+
+    public double getLastCrispOutput() {
+        return lastCrispOutput;
+    }
+
+    public void setFuzzifier(Fuzzifier fuzzifier) {
+        this.fuzzifier = fuzzifier;
+    }
+
+    public void setDefuzzifier(Defuzzifier defuzzifier) {
+        this.defuzzifier = defuzzifier;
+    }
+
+    public void setInferenceEngine(InferenceEngineInterface inferenceEngine) {
+        this.inferenceEngine = inferenceEngine;
+    }
+
+    public Fuzzifier getFuzzifier() {
+        return fuzzifier;
+    }
+
+    public Defuzzifier getDefuzzifier() {
+        return defuzzifier;
+    }
+
+    public InferenceEngineInterface getInferenceEngine() {
+        return inferenceEngine;
+    }
+}

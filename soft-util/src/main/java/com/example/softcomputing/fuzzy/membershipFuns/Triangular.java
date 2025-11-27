@@ -1,6 +1,5 @@
 package com.example.softcomputing.fuzzy.membershipFuns;
 
-import com.example.softcomputing.fuzzy.MembershipFunction;
 import com.example.softcomputing.fuzzy.utils.Point;
 
 public class Triangular implements MembershipFunction {
@@ -20,15 +19,15 @@ public class Triangular implements MembershipFunction {
     // Triangular membership function
     // Returns 0 if outside [p1.x, p3.x]
     // Linear rise from p1 to p2, linear fall from p2 to p3
-    
+
     if (x <= p1.getX() || x >= p3.getX()) {
       return 0.0;
     }
-    
+
     if (x == p2.getX()) {
       return p2.getY(); // peak value
     }
-    
+
     if (x < p2.getX()) {
       // Rising slope from p1 to p2
       double slope = (p2.getY() - p1.getY()) / (p2.getX() - p1.getX());

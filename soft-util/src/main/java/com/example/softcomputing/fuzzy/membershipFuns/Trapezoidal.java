@@ -1,9 +1,7 @@
 package com.example.softcomputing.fuzzy.membershipFuns;
 
-import com.example.softcomputing.fuzzy.MembershipFunction;
-
 public class Trapezoidal implements MembershipFunction {
-    
+
     private double a, b, c, d;
 
     public Trapezoidal(double a, double b, double c, double d) {

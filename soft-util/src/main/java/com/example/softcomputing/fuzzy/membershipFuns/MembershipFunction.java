@@ -1,4 +1,4 @@
-package com.example.softcomputing.fuzzy;
+package com.example.softcomputing.fuzzy.membershipFuns;
 
 public interface MembershipFunction {
 

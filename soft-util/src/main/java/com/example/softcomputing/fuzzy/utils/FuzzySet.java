@@ -72,7 +72,7 @@ public class FuzzySet {
         MIN, MAX
     }
 
-    public double getExtremumX(ExtremumType type) {  // to get min or max x value
+    public double getExtremumX(ExtremumType type) { // to get min or max x value
         if (type == ExtremumType.MIN) {
             return membershipPoints.stream()
                     .mapToDouble(Point::getX)
@@ -86,11 +86,6 @@ public class FuzzySet {
         }
     }
 
-    /**
-     * Set membership values by linguistic label. This is a convenience used by some fuzzifiers
-     * which produce a map of label->degree. We also populate the numeric membershipPoints
-     * with index-based x coordinates so defuzzifiers that use points can operate.
-     */
     public void setMembershipValues(java.util.Map<String, Double> map) {
         this.membershipValuesMap = new java.util.HashMap<>(map);
         this.membershipPoints.clear();
@@ -101,7 +96,7 @@ public class FuzzySet {
     }
 
     /**
-     * Returns the linguistic membership map if available.
+     * Returns the linguistic membership map
      */
     public java.util.Map<String, Double> getMembershipValues() {
         return new java.util.HashMap<>(membershipValuesMap);
@@ -112,4 +107,3 @@ public class FuzzySet {
         return String.format("FuzzySet{name='%s', points=%d}", name, membershipPoints.size());
     }
 }
-
