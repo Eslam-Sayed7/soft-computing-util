@@ -1,3 +1,9 @@
+/*
+ * Car.java
+ * Entity class representing a car in the simulation.
+ * Responsible for car movement, sensor updates, collision detection, and fitness calculation.
+ */
+
 package com.example.softcomputing.usecase.simulation.entity;
 
 import java.awt.Color;
@@ -8,6 +14,7 @@ import com.example.softcomputing.neuralnetwork.core.NeuralNetwork;
 import com.example.softcomputing.usecase.simulation.utils.SimulationCanvas;
 
 public class Car {
+    // car state
     private double x, y;
     private double angle;
     private double speed;
@@ -17,27 +24,29 @@ public class Car {
     private static final int NUM_SENSORS = 5;
     private static final double SENSOR_LENGTH = 150.0;
 
-    // Finish line coordinates
+    // Finish line coordinates for Fitness calculation
     private static final double FINISH_X = 1100.0;
     private static final double FINISH_Y = 100.0;
-
-    private boolean best = false;
-
-    public void setBest(boolean value) {
-        this.best = value;
-    }
-
-    private double[] sensorDistances;
-    private double[] sensorAngles;
-    private NeuralNetwork nn;
-    private boolean alive;
-    private double fitness;
+    // Additional fitness parameters
     private int timeSurvived;
     private double distanceTraveled;
+    // Flag to indicate if this car is the best in the population
+    private boolean best = false;
+    // Sensor data
+    private double[] sensorDistances;
+    private double[] sensorAngles;
+    // neural network controlling the car
+    private NeuralNetwork nn;
+    // car status
+    private boolean alive;
+    private double fitness;
     private double closestDistanceToFinish;
+    // reference to the track grid
     private boolean[][] trackGrid;
+    // grid dimensions
     private final int gridWidth;
     private final int gridHeight;
+    private double lastOutputActivation = 0.0;
 
     public Car(double startX, double startY, double startAngle, boolean[][] trackGrid) {
         this.x = startX;
@@ -70,6 +79,7 @@ public class Car {
         this.nn = new NeuralNetwork(nn);
     }
 
+    // Setup sensor angles at angles
     private void setupSensors() {
         double[] angles = { -Math.PI / 2, -Math.PI / 4, 0, Math.PI / 4, Math.PI / 2 };
         for (int i = 0; i < NUM_SENSORS; i++) {
@@ -77,13 +87,19 @@ public class Car {
         }
     }
 
+    // for debugging
+    public double getLastOutputActivation() {
+        return lastOutputActivation;
+    }
+
+    // update car state
     public void update() {
         if (!alive)
             return;
 
         timeSurvived++;
 
-        // Store old position for distance calculation
+        // Store old position for distance calculation (might not use it thu)
         double oldX = x;
         double oldY = y;
 
@@ -94,17 +110,20 @@ public class Car {
         double dx = x - oldX;
         double dy = y - oldY;
         distanceTraveled += Math.sqrt(dx * dx + dy * dy);
-
+        // update sensor to get new readings for the neural network
         updateSensors();
-
+        // get normalized sensor inputs
         double[] sensorInputs = normalizeSensorDistances();
         double steering = 0.0;
 
         try {
+            // Feed sensor inputs to neural network to get steering output
             double[] outputs = nn.forward(sensorInputs);
             if (outputs != null && outputs.length > 0) {
                 steering = outputs[0];
+                // Clamp steering to [-1, 1] so we don't get infeasible solution
                 steering = Math.max(-1.0, Math.min(1.0, steering));
+                lastOutputActivation = steering;
             }
         } catch (Exception e) {
             steering = 0.0;
@@ -133,6 +152,7 @@ public class Car {
         return normalized;
     }
 
+    // fitness calculation based on distance to finish line
     private double calculateDistanceToFinish() {
         double dx = FINISH_X - x;
         double dy = FINISH_Y - y;
@@ -148,16 +168,21 @@ public class Car {
 
         double maxDistance = 1200.0;
 
-        fitness = maxDistance - closestDistanceToFinish;
+        fitness = (maxDistance - closestDistanceToFinish);
     }
 
+    public void setBest(boolean isBest) {
+        this.best = isBest;
+    }
+
+    // for collision detection
     private double[][] getCarCorners() {
         double halfWidth = CAR_WIDTH / 2.0;
         double halfHeight = CAR_HEIGHT / 2.0;
 
         double cos = Math.cos(angle);
         double sin = Math.sin(angle);
-
+        // Calculate corners
         return new double[][] {
                 { x + (-halfHeight * cos - halfWidth * sin), y + (-halfHeight * sin + halfWidth * cos) },
                 { x + (-halfHeight * cos + halfWidth * sin), y + (-halfHeight * sin - halfWidth * cos) },
@@ -166,18 +191,21 @@ public class Car {
         };
     }
 
+    // Cast a ray from (startX, startY) at angle rayAngle to detect distance to
+    // nearest wall
     private double castRay(double startX, double startY, double rayAngle) {
         double rayX = startX;
         double rayY = startY;
         double dx = Math.cos(rayAngle);
         double dy = Math.sin(rayAngle);
         double distance = 0;
-
+        // Step along the ray until we hit a wall or reach max sensor length
         while (distance < SENSOR_LENGTH) {
+            // Move ray forward
             rayX += dx * 2;
             rayY += dy * 2;
             distance += 2;
-
+            // Check grid cell
             int gridX = (int) (rayX / SimulationCanvas.CELL_SIZE);
             int gridY = (int) (rayY / SimulationCanvas.CELL_SIZE);
 
@@ -194,6 +222,7 @@ public class Car {
         return SENSOR_LENGTH;
     }
 
+    // Check if any corner of the car is colliding with a wall
     private boolean checkCollision() {
         double[][] corners = getCarCorners();
 

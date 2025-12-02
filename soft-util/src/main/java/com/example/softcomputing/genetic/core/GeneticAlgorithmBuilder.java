@@ -55,6 +55,11 @@ public class GeneticAlgorithmBuilder<C extends Chromosome<?>> {
         return this;
     }
 
+    public GeneticAlgorithmBuilder<C> withFitnessFunction(FitnessFunction<C> fitnessFunction) {
+        this.fitnessFunction = fitnessFunction;
+        return this;
+    }
+
     public GeneticAlgorithmBuilder<C> withPopulation() {
         if (chromosomeFactory == null) {
             throw new IllegalStateException("Chromosome factory must be set before initializing population.");

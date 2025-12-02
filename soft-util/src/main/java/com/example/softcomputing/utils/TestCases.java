@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import com.example.softcomputing.tests.fitness.MaxSumFitness;
 import com.example.softcomputing.genetic.chromosome.BinaryChromosome;
 import com.example.softcomputing.genetic.chromosome.Factories.BinaryChromosomeFactory;
 import com.example.softcomputing.genetic.chromosome.Factories.ChromosomeFactory;
@@ -24,7 +25,10 @@ import com.example.softcomputing.genetic.operators.replacement.FullGenerationRep
 import com.example.softcomputing.genetic.operators.replacement.SteadyStateReplacement;
 import com.example.softcomputing.genetic.operators.selection.RandomSelection;
 import com.example.softcomputing.genetic.operators.selection.RankSelection;
+import com.example.softcomputing.genetic.operators.selection.RouletteWheelSelection;
 import com.example.softcomputing.genetic.utils.PopulationInitializer;
+import com.example.softcomputing.tests.fitness.DecFromBinFitness;
+import com.example.softcomputing.tests.fitness.MaxProductFitness;
 
 public class TestCases {
 
@@ -51,8 +55,10 @@ public class TestCases {
                 FitnessFunction fitnessFunction = new DeciFromBinFitnessFunc();
 
                 GeneticAlgorithm<BinaryChromosome> ga = GeneticAlgorithm.<BinaryChromosome>builder()
-                                .withPopulationSize(populationSize).withPopulation(population)
-                                .withChromosomeFactory(factory).withSelectionStrategy(new RandomSelection<>())
+                                .withPopulationSize(populationSize)
+                                .withPopulation(population)
+                                .withChromosomeFactory(factory)
+                                .withSelectionStrategy(new RouletteWheelSelection<>(population))
                                 .withCrossoverStrategy(new SinglePointCrossover<>(crossoverRate, factory))
                                 .withMutationStrategy(new BinaryMutation(mutationRate))
                                 .withReplacementStrategy(new FullGenerationReplacement<>())
@@ -90,6 +96,7 @@ public class TestCases {
                         }
                         population.add(factory.create(genes));
                 }
+                FitnessFunction<IntegerChromosome> fitnessFunction = new MaxSumFitness();
 
                 GeneticAlgorithm<IntegerChromosome> ga = GeneticAlgorithm.<IntegerChromosome>builder()
                                 .withPopulationSize(populationSize).withPopulation(population)
@@ -159,6 +166,7 @@ public class TestCases {
 
                 List<IntegerChromosome> intPop = PopulationInitializer.randomIntegerPopulation(populationSize,
                                 geneLength, geneMin, geneMax);
+                FitnessFunction<IntegerChromosome> fitnessFunction = new MaxSumFitness();
 
                 FitnessFunction fitnessFunction = new SumFitnessFun();
 

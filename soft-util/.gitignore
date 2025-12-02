@@ -62,6 +62,7 @@ build/
 
 ## VS Code
 .vscode/
+../.idea/
 
 ### OS files ###
 .DS_Store

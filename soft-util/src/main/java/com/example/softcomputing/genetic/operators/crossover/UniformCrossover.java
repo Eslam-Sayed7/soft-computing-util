@@ -44,12 +44,12 @@ public class UniformCrossover<T, C extends Chromosome<T>> implements CrossoverSt
 		for (int i = 0; i < length; i++) {
 			double r = rand.nextDouble();
 			if (r < mixingRatio) {
-                child1Genes[i] = parent2.getGene(i);
-                child2Genes[i] = parent1.getGene(i);
-            } else {
-                child1Genes[i] = parent1.getGene(i);
-                child2Genes[i] = parent2.getGene(i);
-            }
+				child1Genes[i] = parent2.getGene(i);
+				child2Genes[i] = parent1.getGene(i);
+			} else {
+				child1Genes[i] = parent1.getGene(i);
+				child2Genes[i] = parent2.getGene(i);
+			}
 		}
 		List<C> offspring = new ArrayList<>();
 		offspring.add(factory.create(child1Genes));

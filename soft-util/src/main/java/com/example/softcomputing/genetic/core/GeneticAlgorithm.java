@@ -22,7 +22,7 @@ public class GeneticAlgorithm<C extends Chromosome<?>> {
     private CrossoverStrategy<C> _crossover;
     private MutationStrategy<C> _mutation;
     private Replacement<C> _replacement;
-
+    private FitnessFunction<C> _fitnessFunction;
     AppLogger _logger = AppLogger.getLogger(GeneticAlgorithm.class);
     FitnessFunction _fitnessFunction;
 
@@ -106,7 +106,7 @@ public class GeneticAlgorithm<C extends Chromosome<?>> {
                 break;
         }
 
-        _logger.info("Overall bestFitness=" + overallBestFitness + " best=" + overallBest);
+        _logger.info("Overall bestFitness=" + overallBestFitness + " best= " + overallBest);
         _logger.info("\n====================================");
         _logger.info("BEST SOLUTION FOUND OVERALL:");
         _logger.info("Best Fitness: " + overallBestFitness);

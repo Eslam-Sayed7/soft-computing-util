@@ -1,0 +1,21 @@
+product_id,name,category,rating,selling_times
+1,ThinkBook Laptop,Computers,4.5,1200
+2,UltraWide Monitor,Computers,4.3,850
+3,Smart LED TV,TV,4.6,2000
+4,4K OLED TV,TV,4.8,1700
+5,Wireless Headphones,Headphones,4.4,900
+6,Noise Cancelling Pro,Headphones,4.7,1100
+7,Summer T-Shirt,Clothes,4.1,500
+8,Cotton Hoodie,Clothes,4.2,430
+9,Modern Sofa,Furniture,4.5,300
+10,Wooden Dining Table,Furniture,4.3,180
+11,Android Smartphone,Mobile,4.7,2500
+12,Flagship Mobile,Mobile,4.9,3000
+13,Running Shoes,Sports,4.2,600
+14,Dumbbell Set,Sports,4.3,450
+15,Air Fryer,Home Appliances,4.6,1400
+16,Vacuum Cleaner,Home Appliances,4.4,900
+17,Espresso Machine,Kitchen,4.7,800
+18,Blender Pro,Kitchen,4.5,650
+19,Kids Story Book,Books,4.8,1200
+20,Programming in Rust,Books,4.9,1500

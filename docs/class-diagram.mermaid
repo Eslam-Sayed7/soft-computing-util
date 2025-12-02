@@ -1,0 +1,77 @@
+classDiagram
+    direction LR
+
+    class FuzzyController {
+        <<functional facade>>
+        - Function<Double, Map~String, Double~> fuzzifier
+        - Function<Map~String, Double~, Map~String, Double~> inferenceEngine
+        - Function<Map~String, Double~, Double> defuzzifier
+        + FuzzyController(Function<Double, Map>, Function<Map, Map>, Function<Map, Double>)
+        + double compute(double input)
+    }
+
+    %% Functional Components
+    class Fuzzifier {
+        <<function>>
+        + Map~String, Double~ fuzzify(double crispInput)
+    }
+
+    class InferenceEngine {
+        <<function>>
+        + Map~String, Double~ infer(Map~String, Double~ fuzzyInputs)
+    }
+
+    class Defuzzifier {
+        <<function>>
+        + double defuzzify(Map~String, Double~ fuzzyOutputs)
+    }
+
+    %% Rule Representation (Functional)
+    class FuzzyRule {
+        <<immutable data>>
+        + String name
+        + Predicate~Map~String, Double~~ condition
+        + Function~Map~String, Double~, Map~String, Double~~ consequence
+        + Map~String, Double~ apply(Map~String, Double~ inputs)
+    }
+
+    class RuleBase {
+        <<immutable>>
+        - List~FuzzyRule~ rules
+        + RuleBase(List~FuzzyRule~)
+        + Map~String, Double~ evaluate(Map~String, Double~ inputs)
+    }
+
+    %% Functional Memberships
+    class MembershipFunction {
+        <<functional interface>>
+        + double apply(double x)
+    }
+
+    class MembershipLibrary {
+        <<pure functions>>
+        + static Function~Double, Double~ triangular(a,b,c)
+        + static Function~Double, Double~ trapezoidal(a,b,c,d)
+        + static Function~Double, Double~ gaussian(mean,sigma)
+    }
+
+    %% Functional Defuzzification
+    class DefuzzificationLibrary {
+        <<pure functions>>
+        + static Function~Map~String, Double~, Double~ centroid()
+        + static Function~Map~String, Double~, Double~ meanOfMaxima()
+    }
+
+    %% Relationships
+    FuzzyController --> Fuzzifier
+    FuzzyController --> InferenceEngine
+    FuzzyController --> Defuzzifier
+
+    InferenceEngine --> RuleBase
+    RuleBase --> FuzzyRule
+
+    Fuzzifier --> MembershipFunction
+    MembershipFunction <.. MembershipLibrary
+
+    Defuzzifier <.. DefuzzificationLibrary
+
