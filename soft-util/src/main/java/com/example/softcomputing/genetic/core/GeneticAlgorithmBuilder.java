@@ -26,7 +26,7 @@ public class GeneticAlgorithmBuilder<C extends Chromosome<?>> {
     MutationStrategy<C> mutation;
     Replacement<C> replacement;
     ChromosomeFactory<?, C> chromosomeFactory;
-    FitnessFunction<C> fitnessFunction;
+    FitnessFunction fitnessFunction;
 
     AppLogger logger = AppLogger.getLogger(GeneticAlgorithmBuilder.class);
 
@@ -97,6 +97,11 @@ public class GeneticAlgorithmBuilder<C extends Chromosome<?>> {
 
     public GeneticAlgorithmBuilder<C> withMaxGenerations(long maxGen) {
         this.maxGenerations = maxGen;
+        return this;
+    }
+
+    public GeneticAlgorithmBuilder<C> withFitnessFunction(FitnessFunction fitnessFunction) {
+        this.fitnessFunction = fitnessFunction;
         return this;
     }
 
