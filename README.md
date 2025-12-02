@@ -72,6 +72,51 @@ Run the neuroevolution race simulation (GUI):
 mvn -pl soft-util exec:java -Dexec.mainClass="com.example.softcomputing.usecase.simulation.RaceSimulation"
 ```
 
+Run the fuzzy logic demo (`FuzzyApp`)
+-----------------------------------
+
+The repository includes a small runnable demo for the fuzzy subsystem: `com.example.softcomputing.fuzzy.FuzzyApp`.
+
+from the `soft-util` directory you can run the demo directly with system Maven :
+
+```bash
+mvn exec:java -Dexec.mainClass="com.example.softcomputing.fuzzy.FuzzyApp"
+```
+Or using the included Maven wrapper from the module directory:
+
+```bash
+./mvnw exec:java -Dexec.mainClass="com.example.softcomputing.fuzzy.FuzzyApp"
+```
+
+### Run the recommendation system
+
+The repository includes a simple recommendation runner that scores and ranks products per user using the fuzzy subsystem: `com.example.softcomputing.fuzzy.RecommendationRunner`.
+
+From the `soft-util` module directory you can run it with the Maven wrapper:
+
+```bash
+./mvnw exec:java -Dexec.mainClass="com.example.softcomputing.fuzzy.RecommendationRunner"
+```
+
+Or with system Maven:
+
+```bash
+mvn -pl soft-util exec:java -Dexec.mainClass="com.example.softcomputing.fuzzy.RecommendationRunner"
+```
+
+Optional arguments (in order):
+- product CSV path (default: auto-detected common locations)
+- user CSV path (default: auto-detected common locations)
+- output directory (default: `output` in current working directory)
+
+Example passing explicit CSVs and output dir:
+
+```bash
+./mvnw exec:java -Dexec.mainClass="com.example.softcomputing.fuzzy.RecommendationRunner" -Dexec.args="src/main/java/com/example/softcomputing/fuzzy/data/product.csv src/main/java/com/example/softcomputing/fuzzy/data/person.csv output"
+```
+
+After the run, a CSV file will be written per user (e.g. `user_1_recommendations.csv`) in the chosen output directory.
+
 Notes:
 - The project contains a Maven Shade plugin configured to produce a shaded jar, but the `mainClass` in the pom currently points to `com.example.soft_util.SoftUtilApplication` (underscored package name) which does not match the real package. If you prefer an executable jar, I can update the `pom.xml` to set the correct `mainClass` to `com.example.softcomputing.genetic.SoftUtilApplication`.
 - Using `exec:java` (shown above) avoids the shade configuration issue and runs the classes directly from the build output.

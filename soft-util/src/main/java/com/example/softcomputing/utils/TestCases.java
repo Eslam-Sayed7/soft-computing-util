@@ -52,7 +52,7 @@ public class TestCases {
                 }
 
                 ChromosomeFactory<Integer, BinaryChromosome> factory = new BinaryChromosomeFactory();
-                FitnessFunction<BinaryChromosome> fitnessFunction = new DecFromBinFitness();
+                FitnessFunction fitnessFunction = new DeciFromBinFitnessFunc();
 
                 GeneticAlgorithm<BinaryChromosome> ga = GeneticAlgorithm.<BinaryChromosome>builder()
                                 .withPopulationSize(populationSize)
@@ -86,6 +86,7 @@ public class TestCases {
 
                 Random rnd = new Random();
                 ChromosomeFactory<Integer, IntegerChromosome> factory = new IntegerChromosomeFactory();
+                FitnessFunction fitnessFunction = new SumFitnessFun();
                 List<IntegerChromosome> population = new ArrayList<>();
 
                 for (int i = 0; i < populationSize; i++) {
@@ -131,7 +132,7 @@ public class TestCases {
 
                 ChromosomeFactory<Double, FloatingPointChromosome> factory = new FloatingPointChromosomeFactory(
                                 lowerBound, upperBound);
-                FitnessFunction<FloatingPointChromosome> fitnessFunction = new MaxProductFitness();
+                FitnessFunction fitnessFunction = new ProdFitnessFun();
 
                 GeneticAlgorithm<FloatingPointChromosome> ga = GeneticAlgorithm.<FloatingPointChromosome>builder()
                                 .withPopulationSize(populationSize).withPopulation(population)
@@ -167,6 +168,8 @@ public class TestCases {
                                 geneLength, geneMin, geneMax);
                 FitnessFunction<IntegerChromosome> fitnessFunction = new MaxSumFitness();
 
+                FitnessFunction fitnessFunction = new SumFitnessFun();
+
                 GeneticAlgorithm<IntegerChromosome> intGa = GeneticAlgorithm.<IntegerChromosome>builder()
                                 .withPopulationSize(populationSize).withPopulation(intPop)
                                 .withChromosomeFactory(factory).withSelectionStrategy(new RandomSelection<>())
@@ -195,7 +198,7 @@ public class TestCases {
                 List<BinaryChromosome> binPop = PopulationInitializer.randomBinaryPopulation(populationSize,
                                 geneLength);
 
-                FitnessFunction<BinaryChromosome> fitnessFunction = new DecFromBinFitness();
+                FitnessFunction fitnessFunction = new DeciFromBinFitnessFunc();
 
                 GeneticAlgorithm<BinaryChromosome> binGa = GeneticAlgorithm.<BinaryChromosome>builder()
                                 .withPopulationSize(populationSize).withChromosomeFactory(binFactory)
@@ -228,7 +231,7 @@ public class TestCases {
                                 .randomFloatingPopulation(populationSize, geneLength, lowerBound, upperBound);
                 ChromosomeFactory<Double, FloatingPointChromosome> factory = new FloatingPointChromosomeFactory(
                                 lowerBound, upperBound);
-                FitnessFunction<FloatingPointChromosome> fitnessFunction = new MaxProductFitness();
+                FitnessFunction fitnessFunction = new ProdFitnessFun();
 
                 GeneticAlgorithm<FloatingPointChromosome> floatGa = GeneticAlgorithm.<FloatingPointChromosome>builder()
                                 .withPopulationSize(populationSize).withPopulation(population)
