@@ -76,45 +76,45 @@ mvn -DskipTests package
 Run the interactive GA examples (console) using the provided main class:
 
 ```bash
-mvn -pl soft-util exec:java -Dexec.mainClass="com.example.softcomputing.genetic.SoftUtilApplication"
+mvn -pl soft-util exec:java -Dexec.mainClass="softcomputing.genetic.SoftUtilApplication"
 ```
 
 Run the neuroevolution race simulation (GUI):
 
 ```bash
-mvn -pl soft-util exec:java -Dexec.mainClass="com.example.softcomputing.usecase.simulation.RaceSimulation"
+mvn -pl soft-util exec:java -Dexec.mainClass="softcomputing.usecase.simulation.RaceSimulation"
 ```
 
-Run the fuzzy logic demo (`FuzzyApp`)
+Run the fuzzy logic demo (`FuzzyQDemo`)
 -----------------------------------
 
-The repository includes a small runnable demo for the fuzzy subsystem: `com.example.softcomputing.fuzzy.FuzzyApp`.
+The repository includes a small runnable demo for the fuzzy subsystem: `softcomputing.fuzzy.FuzzyQDemo`.
 
 from the `soft-util` directory you can run the demo directly with system Maven :
 
 ```bash
-mvn exec:java -Dexec.mainClass="com.example.softcomputing.fuzzy.FuzzyApp"
+mvn exec:java -Dexec.mainClass="softcomputing.fuzzy.FuzzyQDemo"
 ```
 Or using the included Maven wrapper from the module directory:
 
 ```bash
-./mvnw exec:java -Dexec.mainClass="com.example.softcomputing.fuzzy.FuzzyApp"
+./mvnw exec:java -Dexec.mainClass="softcomputing.fuzzy.FuzzyQDemo"
 ```
 
 ### Run the recommendation system
 
-The repository includes a simple recommendation runner that scores and ranks products per user using the fuzzy subsystem: `com.example.softcomputing.fuzzy.RecommendationRunner`.
+The repository includes a simple recommendation runner that scores and ranks products per user using the fuzzy subsystem: `softcomputing.fuzzy.usecase.RecommendationRunner`.
 
 From the `soft-util` module directory you can run it with the Maven wrapper:
 
 ```bash
-./mvnw exec:java -Dexec.mainClass="com.example.softcomputing.fuzzy.RecommendationRunner"
+./mvnw exec:java -Dexec.mainClass="softcomputing.fuzzy.usecase.RecommendationRunner"
 ```
 
 Or with system Maven:
 
 ```bash
-mvn -pl soft-util exec:java -Dexec.mainClass="com.example.softcomputing.fuzzy.RecommendationRunner"
+mvn -pl soft-util exec:java -Dexec.mainClass="softcomputing.fuzzy.usecase.RecommendationRunner"
 ```
 
 Optional arguments (in order):
@@ -125,38 +125,66 @@ Optional arguments (in order):
 Example passing explicit CSVs and output dir:
 
 ```bash
-./mvnw exec:java -Dexec.mainClass="com.example.softcomputing.fuzzy.RecommendationRunner" -Dexec.args="src/main/java/com/example/softcomputing/fuzzy/data/product.csv src/main/java/com/example/softcomputing/fuzzy/data/person.csv output"
+./mvnw exec:java -Dexec.mainClass="softcomputing.fuzzy.usecase.RecommendationRunner" -Dexec.args="src/main/resources/data/product.csv src/main/resources/data/person.csv output"
 ```
 
 After the run, a CSV file will be written per user (e.g. `user_1_recommendations.csv`) in the chosen output directory.
 
 Notes:
-- The project contains a Maven Shade plugin configured to produce a shaded jar, but the `mainClass` in the pom currently points to `com.example.soft_util.SoftUtilApplication` (underscored package name) which does not match the real package. If you prefer an executable jar, I can update the `pom.xml` to set the correct `mainClass` to `com.example.softcomputing.genetic.SoftUtilApplication`.
-- Using `exec:java` (shown above) avoids the shade configuration issue and runs the classes directly from the build output.
+- The project contains a Maven Shade plugin configured to produce a shaded jar. Using `exec:java` (shown above) runs the classes directly from the build output.
+- Data files (CSV) are located in `src/main/resources/data/` directory.
 
 ## Examples
 
-- Interactive console: `com.example.softcomputing.genetic.SoftUtilApplication` — choose chromosomes and run built-in test cases.
-- GUI simulation: `com.example.softcomputing.usecase.simulation.RaceSimulation` — opens a Swing window showing neuroevolution racing demo (training/inference modes).
-- Useful helper: `com.example.softcomputing.utils.TestCases` contains preconfigured GA test scenarios invoked by the console application.
+- Interactive console: `softcomputing.genetic.SoftUtilApplication` — choose chromosomes and run built-in test cases.
+- GUI simulation: `softcomputing.usecase.simulation.RaceSimulation` — opens a Swing window showing neuroevolution racing demo (training/inference modes).
+- Fuzzy logic demo: `softcomputing.fuzzy.FuzzyQDemo` — demonstrates fuzzy logic controllers with quality assessment examples.
+- Recommendation system: `softcomputing.fuzzy.usecase.RecommendationRunner` — product recommendation system using fuzzy logic.
+- Useful helper: `softcomputing.utils.TestCases` contains preconfigured GA test scenarios invoked by the console application.
 
 ## Project structure
 
 Top-level module: `soft-util`
 
-- `src/main/java/com/example/softcomputing/genetic` — GA core, operators, chromosome implementations and factories
-- `src/main/java/com/example/softcomputing/neuralnetwork` — small feed-forward NN implementation
-- `src/main/java/com/example/softcomputing/fuzzy` — fuzzy logic utilities
-- `src/main/java/com/example/softcomputing/usecase/simulation` — example simulation (RaceSimulation) and related utilities
-- `src/test` — tests and fitness function examples
- - `docs/` — documentation and diagrams
-	- Markdown files:
-		- [fuzzy.md](docs/fuzzy.md) — notes about fuzzy subsystem
-		- [genetic-algo.md](docs/genetic-algo.md) — design notes for genetic algorithm module
-		- [NN.md](docs/NN.md) — neural network notes
-	- Diagrams:
-		- [class-diagram.mermaid](docs/class-diagram.mermaid)
-		- [diagrams](docs/diagrams/) — supporting diagram files
+```
+soft-util/
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── softcomputing/
+│   │   │       ├── fuzzy/               # Fuzzy logic system
+│   │   │       │   ├── Defuzzifiers/
+│   │   │       │   ├── Fuzzfication/
+│   │   │       │   ├── inference/
+│   │   │       │   ├── membershipFuns/
+│   │   │       │   ├── operators/
+│   │   │       │   ├── usecase/         # Fuzzy use cases (e.g., RecommendationRunner)
+│   │   │       │   └── utils/
+│   │   │       ├── genetic/             # Genetic algorithms core
+│   │   │       │   ├── chromosome/
+│   │   │       │   ├── core/
+│   │   │       │   ├── operators/
+│   │   │       │   └── utils/
+│   │   │       ├── neuralnetwork/       # Neural network implementations
+│   │   │       │   └── core/
+│   │   │       ├── tests/               # Test utilities and fitness functions
+│   │   │       │   └── fitness/
+│   │   │       ├── usecase/             # Application use cases
+│   │   │       │   └── simulation/      # Race simulation demo
+│   │   │       └── utils/               # Shared utilities
+│   │   └── resources/
+│   │       ├── application.properties
+│   │       └── data/                    # CSV data files
+│   │           ├── person.csv
+│   │           └── product.csv
+│   └── test/
+│       └── java/                        # Unit tests
+└── docs/                                # Documentation
+    ├── fuzzy.md                         # Fuzzy subsystem notes
+    ├── genetic-algo.md                  # Genetic algorithm design notes
+    ├── NN.md                            # Neural network notes
+    └── class-diagram.mermaid            # Architecture diagrams
+```
 
 ## Documentation
 
