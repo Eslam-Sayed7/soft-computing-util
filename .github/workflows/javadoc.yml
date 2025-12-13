@@ -29,11 +29,20 @@ jobs:
       
       - name: Prepare documentation for deployment
         run: |
-          # Copy the custom landing page to the deployment directory
-          cp .github/javadoc-index.html soft-util/target/site/apidocs/landing.html
-          # Create .nojekyll file to prevent GitHub from processing files with Jekyll
-          touch soft-util/target/site/apidocs/.nojekyll
-          # The actual Javadoc index.html stays as the main documentation entry point
+          # Check if the apidocs directory exists
+          if [ -d "soft-util/target/site/apidocs" ]; then
+            echo "Javadoc generated successfully"
+            # Create .nojekyll file to prevent GitHub from processing files with Jekyll
+            touch soft-util/target/site/apidocs/.nojekyll
+            # Optionally copy the custom landing page if it exists
+            if [ -f ".github/javadoc-index.html" ]; then
+              cp .github/javadoc-index.html soft-util/target/site/apidocs/landing.html
+              echo "Custom landing page copied"
+            fi
+          else
+            echo "Error: Javadoc directory not found"
+            exit 1
+          fi
       
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
