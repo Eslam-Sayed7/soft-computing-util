@@ -25,7 +25,22 @@ jobs:
       - name: Generate Javadoc
         run: |
           cd soft-util
-          mvn clean javadoc:javadoc
+          echo "Starting Javadoc generation..."
+          mvn clean javadoc:javadoc -e
+          EXIT_CODE=$?
+          echo "Maven exit code: $EXIT_CODE"
+          # List the target directory to debug
+          echo "Contents of target/site:"
+          ls -la target/site/ || echo "target/site does not exist"
+          if [ -d "target/site/apidocs" ]; then
+            echo "✓ apidocs directory exists"
+            echo "Files in apidocs:"
+            ls -la target/site/apidocs/ | head -20
+          else
+            echo "✗ apidocs directory does NOT exist - Javadoc generation failed"
+            echo "Showing Maven output errors if any..."
+            exit 1
+          fi
       
       - name: Prepare documentation for deployment
         run: |

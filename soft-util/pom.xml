@@ -89,12 +89,6 @@
 				<additionalOptions>
 					<additionalOption>-html5</additionalOption>
 				</additionalOptions>
-				<sourceFileIncludes>
-					<sourceFileInclude>com/example/softcomputing/genetic/**/*.java</sourceFileInclude>
-					<sourceFileInclude>com/example/softcomputing/utils/FitnessFunction.java</sourceFileInclude>
-					<sourceFileInclude>com/example/softcomputing/utils/AppLogger.java</sourceFileInclude>
-					<sourceFileInclude>com/example/softcomputing/utils/InfeasibleSolution.java</sourceFileInclude>
-				</sourceFileIncludes>
 			</configuration>
 			<executions>
 				<execution>
