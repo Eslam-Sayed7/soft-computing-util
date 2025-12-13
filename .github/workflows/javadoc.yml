@@ -1,0 +1,71 @@
+name: Generate and Deploy Javadoc
+
+on:
+  push:
+    branches:
+      - main
+      - jdocs 
+  workflow_dispatch: 
+
+jobs:
+  javadoc:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: Generate Javadoc
+        run: |
+          cd soft-util
+          echo "Starting Javadoc generation..."
+          mvn clean javadoc:javadoc -e
+          EXIT_CODE=$?
+          echo "Maven exit code: $EXIT_CODE"
+          # List the target directory to debug
+          echo "Contents of target/site:"
+          ls -la target/site/ || echo "target/site does not exist"
+          if [ -d "target/site/apidocs" ]; then
+            echo "✓ apidocs directory exists"
+            echo "Files in apidocs:"
+            ls -la target/site/apidocs/ | head -20
+          else
+            echo "✗ apidocs directory does NOT exist - Javadoc generation failed"
+            echo "Showing Maven output errors if any..."
+            exit 1
+          fi
+      
+      - name: Prepare documentation for deployment
+        run: |
+          # Check if the apidocs directory exists
+          if [ -d "soft-util/target/site/apidocs" ]; then
+            echo "Javadoc generated successfully"
+            # Create .nojekyll file to prevent GitHub from processing files with Jekyll
+            touch soft-util/target/site/apidocs/.nojekyll
+            # Optionally copy the custom landing page if it exists
+            if [ -f ".github/javadoc-index.html" ]; then
+              cp .github/javadoc-index.html soft-util/target/site/apidocs/landing.html
+              echo "Custom landing page copied"
+            fi
+          else
+            echo "Error: Javadoc directory not found"
+            exit 1
+          fi
+      
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./soft-util/target/site/apidocs
+          publish_branch: gh-pages
+          enable_jekyll: false
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'Deploy Javadoc to GitHub Pages'
