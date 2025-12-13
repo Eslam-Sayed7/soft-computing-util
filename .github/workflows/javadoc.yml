@@ -1,0 +1,47 @@
+name: Generate and Deploy Javadoc
+
+on:
+  push:
+    branches:
+      - main
+      - jdocs 
+  workflow_dispatch: 
+
+jobs:
+  javadoc:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: Generate Javadoc
+        run: |
+          cd soft-util
+          mvn clean javadoc:javadoc
+      
+      - name: Prepare documentation for deployment
+        run: |
+          # Copy the custom landing page to the deployment directory
+          cp .github/javadoc-index.html soft-util/target/site/apidocs/landing.html
+          # Create .nojekyll file to prevent GitHub from processing files with Jekyll
+          touch soft-util/target/site/apidocs/.nojekyll
+          # The actual Javadoc index.html stays as the main documentation entry point
+      
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./soft-util/target/site/apidocs
+          publish_branch: gh-pages
+          enable_jekyll: false
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'Deploy Javadoc to GitHub Pages'

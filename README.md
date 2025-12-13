@@ -24,11 +24,24 @@ This repository contains reusable implementations and example use-cases (includi
 
 The project implements three main soft-computing paradigms:
 
-- Genetic Algorithms (GA) — core classes, selection/crossover/mutation/replacement operators, and chromosome factories.
-- Fuzzy Logic — fuzzy sets, membership and inference utilities (see `soft-util/src/main/java/com/example/softcomputing/fuzzy`).
-- Neural Networks — small feed-forward neural network utilities used together with GA for neuroevolution.
+- **Genetic Algorithms (GA)** — core classes, selection/crossover/mutation/replacement operators, and chromosome factories.
+- **Fuzzy Logic** — fuzzy sets, membership and inference utilities.
+- **Neural Networks** — small feed-forward neural network utilities used together with GA for neuroevolution.
 
 Modules are designed to be reusable and combinable for experiments and small research projects.
+
+## 📚 Documentation
+
+**[View API Documentation (Javadoc)](https://callmeess.github.io/soft-computing-util/)**
+
+The complete API documentation is automatically generated and hosted on GitHub Pages. It includes:
+- Comprehensive package overviews
+- Detailed class and interface documentation
+- Usage examples and code snippets
+- Method-level documentation with parameters and return types
+
+The documentation is updated automatically with each push to the repository.
+>>>>>>> be3bb3d (Setup GitHub Pages for Javadoc deployment)
 
 ## Requirements
 

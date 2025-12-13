@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Soft Computing Utilities - Overview</title>
+</head>
+<body>
+<h1>Soft Computing Utilities Library</h1>
+
+<p>
+    This library provides comprehensive implementations of soft computing techniques including
+    genetic algorithms, fuzzy logic systems, and neural networks.
+</p>
+
+<h2>Genetic Algorithms Package</h2>
+<p>
+    The <code>softcomputing.genetic</code> package provides a flexible and extensible
+    framework for implementing genetic algorithms. It supports various chromosome representations
+    and genetic operators.
+</p>
+
+<h3>Key Features</h3>
+<ul>
+    <li><b>Multiple Chromosome Types:</b> Binary, Integer, and Floating-Point representations</li>
+    <li><b>Flexible Selection Strategies:</b> Tournament, Roulette Wheel, Rank, and Random selection</li>
+    <li><b>Various Crossover Methods:</b> Single-Point, Two-Point, and Uniform crossover</li>
+    <li><b>Mutation Operators:</b> Type-specific mutation strategies</li>
+    <li><b>Replacement Strategies:</b> Elitism, Full Generation, and Steady-State replacement</li>
+    <li><b>Builder Pattern:</b> Easy configuration through fluent API</li>
+</ul>
+
+<h3>Quick Start Example</h3>
+<pre>
+// Create a genetic algorithm to solve an optimization problem
+GeneticAlgorithm&lt;BinaryChromosome&gt; ga = new GeneticAlgorithmBuilder&lt;BinaryChromosome&gt;()
+    .withChromosomeFactory(new BinaryChromosomeFactory())
+    .withPopulationSize(100)
+    .withGeneLength(20)
+    .withMaxGenerations(1000)
+    .withMutationRate(0.01)
+    .withCrossoverRate(0.7)
+    .withSelectionStrategy(new TournamentSelection&lt;&gt;(5))
+    .withCrossoverStrategy(new SinglePointCrossover&lt;&gt;())
+    .withMutationStrategy(new BinaryMutation(0.01))
+    .withReplacementStrategy(new ElitismReplacement&lt;&gt;(10))
+    .withFitnessFunction(chromosome -&gt; evaluateFitness(chromosome))
+    .withPopulation()  // generates initial population
+    .build();
+
+// Run the algorithm
+ga.run();
+</pre>
+
+<h3>Package Structure</h3>
+<ul>
+    <li><code>softcomputing.genetic.core</code> - Main algorithm classes</li>
+    <li><code>softcomputing.genetic.chromosome</code> - Chromosome representations</li>
+    <li><code>softcomputing.genetic.operators</code> - Genetic operators
+        <ul>
+            <li><code>selection</code> - Parent selection strategies</li>
+            <li><code>crossover</code> - Crossover/recombination strategies</li>
+            <li><code>mutation</code> - Mutation strategies</li>
+            <li><code>replacement</code> - Population replacement strategies</li>
+        </ul>
+    </li>
+    <li><code>softcomputing.genetic.utils</code> - Utility classes</li>
+</ul>
+
+<h2>Getting Started</h2>
+<p>
+    To use this library, add it to your Maven or Gradle project and explore the packages.
+    Start with the <code>GeneticAlgorithmBuilder</code> class in the <code>core</code> package.
+</p>
+
+<h2>License</h2>
+<p>
+    Copyright © 2025. All Rights Reserved.
+</p>
+
+</body>
+</html>
